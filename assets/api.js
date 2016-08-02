@@ -35,11 +35,11 @@ API.prototype = {
         break;
 
       case 'event':
-        var callbacks = this.subscriptions.get(name);
+        var callbacks = this.subscriptions.get(data.name);
         if (!callbacks) {
           break;
         }
-        callbacks.forEach((cb) => cb.call(null, data.args));
+        callbacks.forEach((cb) => cb.apply(null, data.args));
         break;
 
       default:
