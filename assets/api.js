@@ -56,6 +56,8 @@ API.prototype = {
     var args = Array.prototype.slice.call(arguments);
     args.shift();
 
+    dump('Client API: async ' + name + JSON.stringify(args) + '\n');
+
     var deferred = new this.Deferred();
     this.deferreds.set(id, deferred);
 
@@ -77,6 +79,8 @@ API.prototype = {
     var args = Array.prototype.slice.call(arguments);
     args.shift();
 
+    dump('Client API: notify ' + name + JSON.stringify(args) + '\n');
+
     this._sendMessage({
       type: 'notify',
       name: name,
@@ -96,7 +100,7 @@ API.prototype = {
 
   _sendMessage: function(obj) {
     if (window.parent === window) {
-      console.warn('API: No parent to send.', obj);
+      dump('Client API: No parent to send.\n');
       return false;
     }
 
