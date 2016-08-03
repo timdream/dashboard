@@ -92,13 +92,12 @@ API.prototype = {
   },
 
   _sendMessage: function(obj) {
-    if (!window._dashboardParent) {
+    if (window.parent === window) {
       console.warn('API: No parent to send.', obj);
-      dump('API: No parent to send.' + JSON.stringify(obj) + '\n');
       return false;
     }
 
-    window._dashboardParent(obj);
+    window.parent.postMessage(obj, '*');
 
     return true;
   },
