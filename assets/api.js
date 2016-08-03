@@ -9,18 +9,18 @@ API.prototype = {
     this.deferreds = new Map();
     this.subscriptions = new Map();
 
-    window.addEventListener('message', this);
+    window.addEventListener('hashchange', this);
   },
 
   stop: function() {
     this.deferreds = null;
     this.subscriptions = null;
 
-    window.removeEventListener('message', this);
+    window.removeEventListener('hashchange', this);
   },
 
   handleEvent: function(evt) {
-    var data = evt.data;
+    var data = decodeURIComponent(window.location.hash.substr(1));
 
     switch (data.type) {
       case 'async':
@@ -92,13 +92,7 @@ API.prototype = {
   },
 
   _sendMessage: function(obj) {
-    if (!window._dashboardParent) {
-      console.warn('API: No parent to send.', obj);
-      dump('API: No parent to send.' + JSON.stringify(obj) + '\n');
-      return false;
-    }
-
-    window._dashboardParent(obj);
+    window.alert(JSON.stringify(obj));
 
     return true;
   },
