@@ -36,7 +36,7 @@ App.prototype = {
       return;
     }
 
-    this.api.notify('hardware.sensors.setBrightness',
+    this.api.notify('hardware.screen.setBrightness',
       sensors.proximity ? 1 : 0);
   },
 
