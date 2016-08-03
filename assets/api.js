@@ -10,6 +10,7 @@ API.prototype = {
     this.subscriptions = new Map();
 
     window.addEventListener('message', this);
+    dump('Client API: add message listener\n');
   },
 
   stop: function() {
@@ -21,6 +22,8 @@ API.prototype = {
 
   handleEvent: function(evt) {
     var data = evt.data;
+
+    dump('Client API: receive messaage ' + JSON.stringify(data) + '\n');
 
     switch (data.type) {
       case 'async':
