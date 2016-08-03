@@ -3,23 +3,12 @@
   <head>
     <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1">
     <meta charset="utf-8">
-    <script>
-      var styleLink = document.createElement('link');
-      styleLink.href = 'assets/style.css' + window.location.search;
-      styleLink.rel = 'stylesheet';
-      document.documentElement.firstElementChild.appendChild(styleLink);
-
-      ['./assets/browser.js',
-        './assets/api.js',
-        './assets/hud.js',
-        './assets/app.js',
-        './assets/main.js'].forEach(function(src) {
-          var script = document.createElement('script');
-          script.async = 'false';
-          script.src = src + window.location.search;
-          document.documentElement.firstElementChild.appendChild(script);
-        });
-    </script>
+    <link rel="stylesheet" href="assets/style.css" />
+    <script defer src="./assets/browser.js"></script>
+    <script defer src="./assets/api.js"></script>
+    <script defer src="./assets/hud.js"></script>
+    <script defer src="./assets/app.js"></script>
+    <script defer src="./assets/main.js"></script>
     <title>Dashboard</title>
   </head>
   <body class="init"><div id="loading"></div></body>
