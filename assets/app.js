@@ -133,6 +133,6 @@ App.prototype = {
 
   _handleError: function(e) {
     console.error(e);
-    dump(e.toString + '\n');
+    dump(e.toString() + '\n');
   }
 };
