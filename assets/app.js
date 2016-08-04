@@ -9,7 +9,7 @@ PauseTimer.prototype = {
   onpaused: null,
   paused: false,
 
-  setScheduledScreenWake: function() {
+  setScheduledUnPause: function() {
     setInterval(() => {
       // Every half-hour
       if ((Math.floor(Date.now() / 1000) % 1800) === 0) {
@@ -77,6 +77,7 @@ App.prototype = {
       })
       .then(() => this.toggleLoading(false))
       .then(() => this.pauseTimer.countToPause())
+      .then(() => this.pauseTimer.setScheduledUnPause())
       .catch((e) => this._handleError(e));
   },
 
