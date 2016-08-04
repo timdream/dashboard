@@ -1,5 +1,46 @@
 'use strict';
 
+var ScreenTimer = function() {
+};
+
+ScreenTimer.prototype = {
+  TIME_TO_OFF: 30 * 1E3,
+
+  onbrightnesschange: null,
+  isBrightnessOn: true,
+
+  setScheduledScreenWake: function() {
+    setInterval(() => {
+      // Every half-hour
+      if ((Math.floor(Date.now() / 1000) % 1800) === 0) {
+        dump('ScreenTimer: turned screen brightness on\n');
+        navigator.vibrate(10);
+        this.wake();
+        this.countToScreenOff();
+      }
+    }, 1000);
+  },
+
+  wake: function() {
+    if (this.isBrightnessOn) {
+      return;
+    }
+    this.isBrightnessOn = true;
+    this.onbrightnesschange(1);
+  },
+
+  countToScreenOff: function() {
+    if (!this.isBrightnessOn) {
+      return;
+    }
+    clearTimeout(this.offTimer);
+    this.offTimer = this.setTimeout(() => {
+      this.isBrightnessOn = false;
+      this.onbrightnesschange(0);
+    }, this.TIME_TO_OFF);
+  }
+};
+
 var App = function() {
   this.api = new API();
   this.hud = new Hud();
@@ -9,13 +50,17 @@ App.prototype = {
   paused: false,
 
   PROXIMITY_ON_WAIT: 100,
-  PROXIMITY_OFF_WAIT: 30 * 1E3,
-  turnedOnByProximity: false,
+  proximityTimerId: undefined,
 
   start: function() {
     var pArr = [];
     pArr.push(this.api.start());
     pArr.push(this.hud.start());
+
+    this.screenTimer = new ScreenTimer();
+    this.screenTimer.onbrightnesschange = (brightness) => {
+      this.api.notify('hardware.screen.setBrightness', brightness);
+    };
 
     this.queue = Promise.resolve()
       .then(() => this.toggleLoading(true))
@@ -27,6 +72,7 @@ App.prototype = {
           this.handleButtonKeyUp.bind(this));
       })
       .then(() => this.toggleLoading(false))
+      .then(() => this.screenTimer.countToScreenOff())
       .catch((e) => this._handleError(e));
   },
 
@@ -40,28 +86,20 @@ App.prototype = {
       return;
     }
 
-    dump('App: proximityTimer cleared.\n');
-    clearTimeout(this.proximityTimer);
     if (sensors.proximity) {
-      if (this.turnedOnByProximity) {
-        return;
-      }
-      dump('App: Set proximityTimer to turn on screen brightness.');
-      this.proximityTimer = setTimeout(() => {
-        this.api.notify('hardware.screen.setBrightness', 1);
-        this.turnedOnByProximity = true;
+      dump('App: Set proximityTimerId to turn on screen brightness.');
+      this.proximityTimerId = setTimeout(() => {
+        this.screenTimer.wake();
+        this.proximityTimerId = undefined;
       }, this.PROXIMITY_ON_WAIT);
+    } else if (this.proximityTimerId !== undefined) {
+      dump('App: proximityTimerId cleared.\n');
+      clearTimeout(this.proximityTimerId);
+      this.proximityTimerId = undefined;
     } else {
-      if (!this.turnedOnByProximity) {
-        return;
-      }
-      dump('App: Set proximityTimer to turn off screen brightness.');
-      this.proximityTimer = setTimeout(() => {
-        this.api.notify('hardware.screen.setBrightness', 0);
-        this.turnedOnByProximity = false;
-      }, this.PROXIMITY_OFF_WAIT);
+      dump('App: Set screenTimer to turn off screen brightness.');
+      this.screenTimer.countToScreenOff();
     }
-
   },
 
   handleButtonKeyUp: function(keyName) {
