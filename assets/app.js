@@ -14,7 +14,7 @@ PauseTimer.prototype = {
       // Every half-hour
       if ((Math.floor(Date.now() / 1000) % 1800) === 0) {
         dump('PauseTimer: turned screen on\n');
-        navigator.vibrate(10);
+        navigator.vibrate([100, 100, 100, 100, 100]);
         this.wake();
         this.countToPause();
       }
