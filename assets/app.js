@@ -34,7 +34,7 @@ ScreenTimer.prototype = {
       return;
     }
     clearTimeout(this.offTimer);
-    this.offTimer = this.setTimeout(() => {
+    this.offTimer = setTimeout(() => {
       this.isBrightnessOn = false;
       this.onbrightnesschange(0);
     }, this.TIME_TO_OFF);
