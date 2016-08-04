@@ -1,43 +1,47 @@
 'use strict';
 
-var ScreenTimer = function() {
+var PauseTimer = function() {
 };
 
-ScreenTimer.prototype = {
+PauseTimer.prototype = {
   TIME_TO_OFF: 30 * 1E3,
 
-  onbrightnesschange: null,
-  isBrightnessOn: true,
+  onpaused: null,
+  paused: false,
 
   setScheduledScreenWake: function() {
     setInterval(() => {
       // Every half-hour
       if ((Math.floor(Date.now() / 1000) % 1800) === 0) {
-        dump('ScreenTimer: turned screen brightness on\n');
+        dump('PauseTimer: turned screen on\n');
         navigator.vibrate(10);
         this.wake();
-        this.countToScreenOff();
+        this.countToPause();
       }
     }, 1000);
   },
 
   wake: function() {
-    if (this.isBrightnessOn) {
+    if (!this.paused) {
       return;
     }
-    this.isBrightnessOn = true;
-    this.onbrightnesschange(1);
+    this.paused = false;
+    this.onpaused(false);
   },
 
-  countToScreenOff: function() {
-    if (!this.isBrightnessOn) {
+  countToPause: function() {
+    if (this.paused) {
       return;
     }
     clearTimeout(this.offTimer);
     this.offTimer = setTimeout(() => {
-      this.isBrightnessOn = false;
-      this.onbrightnesschange(0);
+      this.paused = true;
+      this.onpaused(true);
     }, this.TIME_TO_OFF);
+  },
+
+  togglePaused: function() {
+    this.paused = !this.paused;
   }
 };
 
@@ -57,9 +61,9 @@ App.prototype = {
     pArr.push(this.api.start());
     pArr.push(this.hud.start());
 
-    this.screenTimer = new ScreenTimer();
-    this.screenTimer.onbrightnesschange = (brightness) => {
-      this.api.notify('hardware.screen.setBrightness', brightness);
+    this.pauseTimer = new PauseTimer();
+    this.pauseTimer.onpaused = (paused) => {
+      this.api.notify('setPaused', paused);
     };
 
     this.queue = Promise.resolve()
@@ -72,7 +76,7 @@ App.prototype = {
           this.handleButtonKeyUp.bind(this));
       })
       .then(() => this.toggleLoading(false))
-      .then(() => this.screenTimer.countToScreenOff())
+      .then(() => this.pauseTimer.countToPause())
       .catch((e) => this._handleError(e));
   },
 
@@ -82,14 +86,10 @@ App.prototype = {
   },
 
   handleSensorsUpdate: function(sensors) {
-    if (!this.paused) {
-      return;
-    }
-
     if (sensors.proximity) {
-      dump('App: Set proximityTimerId to turn on screen brightness.');
+      dump('App: Set proximityTimerId to turn on screen.');
       this.proximityTimerId = setTimeout(() => {
-        this.screenTimer.wake();
+        this.pauseTimer.wake();
         this.proximityTimerId = undefined;
       }, this.PROXIMITY_ON_WAIT);
     } else if (this.proximityTimerId !== undefined) {
@@ -97,8 +97,8 @@ App.prototype = {
       clearTimeout(this.proximityTimerId);
       this.proximityTimerId = undefined;
     } else {
-      dump('App: Set screenTimer to turn off screen brightness.');
-      this.screenTimer.countToScreenOff();
+      dump('App: Set pauseTimer to turn off screen.');
+      this.pauseTimer.countToPause();
     }
   },
 
@@ -117,7 +117,7 @@ App.prototype = {
         break;
 
       case 'Power':
-        this.paused = !this.paused;
+        this.pauseTimer.togglePaused();
 
         break;
 
