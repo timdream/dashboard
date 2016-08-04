@@ -9,7 +9,7 @@ App.prototype = {
   paused: false,
 
   PROXIMITY_ON_WAIT: 100,
-  PROXIMITY_OFF_WAIT: 30 * 1E10,
+  PROXIMITY_OFF_WAIT: 30 * 1E3,
   turnedOnByProximity: false,
 
   start: function() {
@@ -40,11 +40,13 @@ App.prototype = {
       return;
     }
 
+    dump('App: proximityTimer cleared.\n');
     clearTimeout(this.proximityTimer);
     if (sensors.proximity) {
       if (this.turnedOnByProximity) {
         return;
       }
+      dump('App: Set proximityTimer to turn on screen brightness.');
       this.proximityTimer = setTimeout(() => {
         this.api.notify('hardware.screen.setBrightness', 1);
         this.turnedOnByProximity = true;
@@ -53,6 +55,7 @@ App.prototype = {
       if (!this.turnedOnByProximity) {
         return;
       }
+      dump('App: Set proximityTimer to turn off screen brightness.');
       this.proximityTimer = setTimeout(() => {
         this.api.notify('hardware.screen.setBrightness', 0);
         this.turnedOnByProximity = false;
