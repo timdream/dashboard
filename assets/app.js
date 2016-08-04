@@ -8,6 +8,10 @@ var App = function() {
 App.prototype = {
   paused: false,
 
+  PROXIMITY_ON_WAIT: 100,
+  PROXIMITY_OFF_WAIT: 30 * 1E10,
+  turnedOnByProximity: false,
+
   start: function() {
     var pArr = [];
     pArr.push(this.api.start());
@@ -36,8 +40,25 @@ App.prototype = {
       return;
     }
 
-    this.api.notify('hardware.screen.setBrightness',
-      sensors.proximity ? 1 : 0);
+    clearTimeout(this.proximityTimer);
+    if (sensors.proximity) {
+      if (this.turnedOnByProximity) {
+        return;
+      }
+      this.proximityTimer = setTimeout(() => {
+        this.api.notify('hardware.screen.setBrightness', 1);
+        this.turnedOnByProximity = true;
+      }, this.PROXIMITY_ON_WAIT);
+    } else {
+      if (!this.turnedOnByProximity) {
+        return;
+      }
+      this.proximityTimer = setTimeout(() => {
+        this.api.notify('hardware.screen.setBrightness', 0);
+        this.turnedOnByProximity = false;
+      }, this.PROXIMITY_OFF_WAIT);
+    }
+
   },
 
   handleButtonKeyUp: function(keyName) {
